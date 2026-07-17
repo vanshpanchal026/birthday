@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Happy Birthday, Riku ❤️</title>
+  <meta name="description" content="A personal birthday gift for someone very special." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* ───────────────────────── RESET & BASE ───────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0912;
+      --bg-card: rgba(20, 17, 30, 0.55);
+      --gold: #e3b96e;
+      --rose: #d67a8a;
+      --cream: #f3ecdf;
+      --cream-dim: rgba(243, 236, 223, 0.55);
+      --serif: 'Cormorant Garamond', Georgia, serif;
+      --sans: 'Manrope', 'Segoe UI', sans-serif;
+      --section-gap: 10vh;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ───────────────────────── PARTICLE CANVAS ───────────────────────── */
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ───────────────────────── GATE / INTRO ───────────────────────── */
+    #gate {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      text-align: center;
+      padding: 2rem;
+      transition: opacity 0.9s ease, visibility 0.9s ease;
+    }
+    #gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    #gate h1 {
+      font-family: var(--serif);
+      font-weight: 600;
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      color: var(--gold);
+      margin-bottom: 1rem;
+      letter-spacing: 0.02em;
+    }
+    #gate p {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1rem, 2.4vw, 1.4rem);
+      color: var(--cream-dim);
+      max-width: 440px;
+      margin-bottom: 2.6rem;
+      line-height: 1.8;
+    }
+
+    .btn-begin {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: linear-gradient(135deg, var(--gold), #c9993e);
+      border: none;
+      border-radius: 60px;
+      padding: 0.85rem 2.8rem;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 0 30px rgba(227, 185, 110, 0.25);
+    }
+    .btn-begin:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 50px rgba(227, 185, 110, 0.45);
+    }
+
+    /* subtle pulsing glow on the gate */
+    .gate-glow {
+      position: absolute;
+      width: 340px; height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(227,185,110,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation: pulse-glow 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.25); }
+    }
+
+    /* ───────────────────────── MAIN CONTENT ───────────────────────── */
+    #content {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 clamp(1.2rem, 4vw, 3rem);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4rem 0;
+    }
+    .hero h1 {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: clamp(2.6rem, 7vw, 5.4rem);
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+      line-height: 1.15;
+    }
+    .hero p {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1.05rem, 2.4vw, 1.45rem);
+      color: var(--cream-dim);
+      max-width: 520px;
+      line-height: 1.85;
+    }
+
+    /* decorative divider */
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 2.5rem auto;
+      border: none;
+    }
+
+    /* ── Memory Sections ── */
+    .memory {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(2rem, 4vw, 4rem);
+      align-items: center;
+      margin-bottom: var(--section-gap);
+      padding: clamp(1.5rem, 3vw, 3rem) 0;
+    }
+    .memory.reverse .memory-media { order: 2; }
+    .memory.reverse .memory-text  { order: 1; }
+
+    .memory-media {
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .memory-media::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      border: 1px solid rgba(227, 185, 110, 0.12);
+      pointer-events: none;
+    }
+    .memory-media img,
+    .memory-media video {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+    }
+
+    .memory-text {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+      color: var(--cream);
+      line-height: 1.95;
+      padding: 1rem 0;
+      opacity: 0.9;
+    }
+    .memory-text::before {
+      content: '"';
+      display: block;
+      font-size: 3.2rem;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    /* ── Final Wish ── */
+    .wish {
+      text-align: center;
+      padding: clamp(6rem, 12vh, 12rem) 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .wish .emoji {
+      font-size: 3.6rem;
+      display: block;
+      margin-bottom: 1.6rem;
+      animation: float-cake 3s ease-in-out infinite;
+    }
+    @keyframes float-cake {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+    .wish p {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+      color: var(--cream);
+      line-height: 2;
+    }
+    .wish .name-line {
+      font-family: var(--serif);
+      font-weight: 700;
+      font-size: clamp(1.8rem, 4.5vw, 3rem);
+      color: var(--gold);
+      display: block;
+      margin-bottom: 1.4rem;
+      font-style: normal;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 3rem 1rem 6rem;
+      font-size: 0.85rem;
+      color: rgba(243,236,223,0.25);
+      font-family: var(--sans);
+    }
+
+    /* ───────────────────────── SCROLL REVEAL ───────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.from-left  { transform: translateX(-60px) translateY(0); }
+    .reveal.from-right { transform: translateX(60px) translateY(0); }
+    .reveal.visible {
+      opacity: 1;
+      transform: translate(0, 0);
+    }
+
+    /* ───────────────────────── MUSIC PLAYER ───────────────────────── */
+    #player {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 900;
+      background: rgba(16, 13, 26, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(227, 185, 110, 0.18);
+      border-radius: 60px;
+      padding: 0.5rem 1rem 0.5rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      font-family: var(--sans);
+    }
+    #player.show { opacity: 1; transform: translateY(0); }
+
+    #player .song-name {
+      font-size: 0.78rem;
+      color: var(--cream-dim);
+      max-width: 130px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 400;
+    }
+
+    #player button {
+      background: none;
+      border: none;
+      color: var(--gold);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #player button:hover { color: var(--cream); transform: scale(1.15); }
+    #player button.play-btn { font-size: 1.25rem; }
+
+    /* ───────────────────────── RESPONSIVE ───────────────────────── */
+    @media (max-width: 720px) {
+      .memory {
+        grid-template-columns: 1fr;
+        gap: 1.6rem;
+      }
+      .memory.reverse .memory-media,
+      .memory.reverse .memory-text { order: unset; }
+
+      .memory-text { padding: 0 0.5rem; }
+
+      #player {
+        right: 12px;
+        bottom: 14px;
+        padding: 0.45rem 0.8rem 0.45rem 1rem;
+      }
+      #player .song-name { max-width: 100px; font-size: 0.72rem; }
+
+      .reveal.from-left,
+      .reveal.from-right {
+        transform: translateY(40px) translateX(0);
+      }
+    }
+
+    /* ───────────────────────── REDUCED MOTION ───────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+      #particles { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── PARTICLES ─── -->
+  <canvas id="particles"></canvas>
+
+  <!-- ─── GATE ─── -->
+  <div id="gate">
+    <div class="gate-glow"></div>
+    <h1>Happy Birthday, Riku</h1>
+    <p>Every love story is beautiful, but ours is something I'd choose to rewrite a thousand times over.</p>
+    <button class="btn-begin" id="btnBegin" aria-label="Begin the experience">Begin ✦</button>
+  </div>
+
+  <!-- ─── MAIN CONTENT ─── -->
+  <div id="content">
+
+    <!-- Hero -->
+    <section class="hero reveal">
+      <h1>Our Little Memory Diary</h1>
+      <hr class="divider" />
+      <p>A collection of small moments that meant everything — told the only way I know how.</p>
+    </section>
+
+    <!-- Memory 1 — Coffee (image left, text right) -->
+    <section class="memory">
+      <div class="memory-media reveal from-left">
+        <img src="media/img-coffee.png" alt="Coffee together" loading="lazy" />
+      </div>
+      <div class="memory-text reveal from-right">
+        Sometimes happiness isn't in big surprises. It's in sitting across from someone who makes an ordinary coffee break feel special. This picture reminds me of exactly that.
+      </div>
+    </section>
+
+    <hr class="divider reveal" />
+
+    <!-- Memory 2 — Horse video (video right, text left) -->
+    <section class="memory reverse">
+      <div class="memory-media reveal from-right">
+        <video src="media/vid-horse.mp4" controls preload="metadata" playsinline></video>
+      </div>
+      <div class="memory-text reveal from-left">
+        I think horse riding ended up being my favorite part of the day. Seeing you laugh, enjoy yourself, and forget everything else for a while made me happier than I expected. That's the version of you I'll always remember.
+      </div>
+    </section>
+
+    <hr class="divider reveal" />
+
+    <!-- Memory 3 — Cheers (image left, text right) -->
+    <section class="memory">
+      <div class="memory-media reveal from-left">
+        <img src="media/img-cheers.jpg" alt="Cheers moment" loading="lazy" />
+      </div>
+      <div class="memory-text reveal from-right">
+        I don't think I'll remember what we were drinking as much as I'll remember that smile. It was such a small moment, but somehow it became one of my favorite memories from the day.
+      </div>
+    </section>
+
+    <hr class="divider reveal" />
+
+    <!-- Memory 4 — Selfie (video right, text left) -->
+    <section class="memory reverse">
+      <div class="memory-media reveal from-right">
+        <img src="media/img-selfie.png" alt="Our selfie" loading="lazy" />
+      </div>
+      <div class="memory-text reveal from-left">
+        Some memories aren't special because the picture is perfect. They're special because of how they make you feel when you look at them again.
+      </div>
+    </section>
+
+    <hr class="divider reveal" />
+
+    <!-- Memory 5 — Party (image left, text right) -->
+    <section class="memory">
+      <div class="memory-media reveal from-left">
+        <img src="media/img-party.png" alt="Party time" loading="lazy" />
+      </div>
+      <div class="memory-text reveal from-right">
+        It's funny how one picture can bring back an entire day. Looking at this, I can almost replay everything we did — and honestly, I'm really grateful we got to make those memories together.
+      </div>
+    </section>
+
+    <hr class="divider reveal" />
+
+    <!-- Memory 6 — Recap video (video right, text left) -->
+    <section class="memory reverse">
+      <div class="memory-media reveal from-right">
+        <video src="media/vid-recap.mp4" controls preload="metadata" playsinline></video>
+      </div>
+      <div class="memory-text reveal from-left">
+        Yesterday reminded me that the best memories aren't always made in extraordinary places — they're made with the right person. From coffee to the movie, from random laughs to the ride back home, every little moment made the day feel special. Thank you for giving me a day I'll always remember.
+      </div>
+    </section>
+
+    <!-- Final Wish -->
+    <section class="wish reveal">
+      <span class="emoji">🎂</span>
+      <span class="name-line">Happy Birthday Riku ❤️</span>
+      <p>I hope every new year of your life gives you something worth remembering: a new dream, a new adventure, and moments that make you smile for no reason. Take care of yourself more than you have taken till now, keep shining, and enjoy your special day, babe.</p>
+    </section>
+
+    <div class="footer">made with love ♥</div>
+  </div>
+
+  <!-- ─── MUSIC PLAYER ─── -->
+  <div id="player">
+    <button id="btnPrev" aria-label="Previous song">⏮</button>
+    <button id="btnPlay" class="play-btn" aria-label="Play / Pause">▶</button>
+    <button id="btnNext" aria-label="Next song">⏭</button>
+    <span class="song-name" id="songName">—</span>
+  </div>
+
+  <!-- ─── AUDIO ─── -->
+  <audio id="audio" preload="auto"></audio>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ════════════════ PLAYLIST ════════════════ */
+    const playlist = [
+      { src: 'media/song-zulfein.mp3',      name: 'Zulfein' },
+      { src: 'media/song-meribaaton.mp3',   name: 'Meri Baaton' },
+      { src: 'media/song-arzkiyahai.mp3',   name: 'Arz Ki Ya Hai' },
+      { src: 'media/song-inaam.mp3',        name: 'Inaam' },
+    ];
+    let currentTrack = 0;
+    let isPlaying = false;
+
+    const audio     = document.getElementById('audio');
+    const btnPlay   = document.getElementById('btnPlay');
+    const btnPrev   = document.getElementById('btnPrev');
+    const btnNext   = document.getElementById('btnNext');
+    const songName  = document.getElementById('songName');
+    const player    = document.getElementById('player');
+
+    function loadTrack(index) {
+      currentTrack = ((index % playlist.length) + playlist.length) % playlist.length;
+      audio.src = playlist[currentTrack].src;
+      songName.textContent = playlist[currentTrack].name;
+    }
+
+    function play() {
+      audio.play().then(() => {
+        isPlaying = true;
+        btnPlay.textContent = '⏸';
+      }).catch(() => {});
+    }
+
+    function pause() {
+      audio.pause();
+      isPlaying = false;
+      btnPlay.textContent = '▶';
+    }
+
+    btnPlay.addEventListener('click', () => isPlaying ? pause() : play());
+    btnNext.addEventListener('click', () => { loadTrack(currentTrack + 1); play(); });
+    btnPrev.addEventListener('click', () => { loadTrack(currentTrack - 1); play(); });
+
+    audio.addEventListener('ended', () => { loadTrack(currentTrack + 1); play(); });
+
+    /* ════════════════ GATE ════════════════ */
+    const gate     = document.getElementById('gate');
+    const btnBegin = document.getElementById('btnBegin');
+
+    btnBegin.addEventListener('click', () => {
+      gate.classList.add('hidden');
+      document.body.style.overflow = '';
+      loadTrack(0);
+      play();
+      player.classList.add('show');
+      initReveal();          // start observing after gate hides
+      initParticles();       // start particle animation
+    });
+
+    // Lock scroll while gate is visible
+    document.body.style.overflow = 'hidden';
+
+    /* ════════════════ SCROLL REVEAL ════════════════ */
+    function initReveal() {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) {
+        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        return;
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+
+    /* ════════════════ PARTICLES ════════════════ */
+    function initParticles() {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) return;
+
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [];
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const COUNT = Math.min(60, Math.floor(window.innerWidth / 18));
+
+      for (let i = 0; i < COUNT; i++) {
+        particles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: Math.random() * 2 + 0.8,
+          speed: Math.random() * 0.35 + 0.12,
+          drift: (Math.random() - 0.5) * 0.3,
+          opacity: Math.random() * 0.45 + 0.1,
+          flicker: Math.random() * Math.PI * 2,
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+          p.y -= p.speed;
+          p.x += p.drift;
+          p.flicker += 0.015;
+
+          if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+          if (p.x < -10) p.x = W + 10;
+          if (p.x > W + 10) p.x = -10;
+
+          const alpha = p.opacity * (0.65 + 0.35 * Math.sin(p.flicker));
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(227, 185, 110, ${alpha})`;
+          ctx.fill();
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+  })();
+  </script>
+
+</body>
+</html>
