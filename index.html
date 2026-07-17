@@ -700,6 +700,12 @@
     let isPlayerHovered = false;
 
     function startAutoScroll() {
+      if (prefersReduced) return;
+
+      // Temporarily disable smooth scroll behavior during auto-scroll
+      // so it doesn't conflict with frame-by-frame JS scroll calls
+      document.documentElement.style.scrollBehavior = 'auto';
+
       autoScrollActive = true;
       autoScrollPaused = false;
       lastScrollTime = performance.now();
@@ -738,14 +744,20 @@
       const px = SCROLL_PX_PER_SEC * clampedDelta;
 
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (window.scrollY >= maxScroll - 1) {
+      
+      // Only complete scroll if page has actual scrollable height (maxScroll > 10)
+      // and we are close to the bottom (window.scrollY >= maxScroll - 5).
+      // This prevents early termination if images/media are still loading or if maxScroll is temporarily <= 0.
+      if (maxScroll > 10 && window.scrollY >= maxScroll - 5) {
         window.scrollTo({ top: maxScroll });
         autoScrollActive = false;
+        document.documentElement.style.scrollBehavior = ''; // Restore smooth scroll
         return;
       }
 
       window.scrollBy({ top: px, left: 0 });
     }
+
 
     function onUserScroll(e) {
       if (!autoScrollActive) return;
