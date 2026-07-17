@@ -162,7 +162,63 @@
       line-height: 1.85;
     }
 
-    /* decorative divider */
+    /* decorative ember divider */
+    .ember-divider {
+      position: relative;
+      width: 100%;
+      height: 60px;
+      margin: 2rem auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ember-divider .ember-line {
+      width: 0;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ember-divider.visible .ember-line {
+      width: 80px;
+    }
+    .ember-divider .ember-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 28px; height: 28px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(227,185,110,0.4) 0%, rgba(227,185,110,0.08) 50%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.8s ease 0.4s;
+      animation: ember-pulse 2.5s ease-in-out infinite;
+      animation-play-state: paused;
+    }
+    .ember-divider.visible .ember-glow {
+      opacity: 1;
+      animation-play-state: running;
+    }
+    @keyframes ember-pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+      50%      { transform: translate(-50%, -50%) scale(1.35); opacity: 1; }
+    }
+    /* floating sparks */
+    .ember-divider .ember-spark {
+      position: absolute;
+      width: 3px; height: 3px;
+      border-radius: 50%;
+      background: var(--gold);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .ember-divider.visible .ember-spark {
+      animation: spark-float var(--spark-dur, 2.2s) ease-out var(--spark-delay, 0s) infinite;
+    }
+    @keyframes spark-float {
+      0%   { opacity: 0; transform: translate(var(--sx, 0), 0) scale(1); }
+      15%  { opacity: 0.8; }
+      100% { opacity: 0; transform: translate(var(--ex, 4px), -35px) scale(0.3); }
+    }
+    /* keep the hero divider simple */
     .divider {
       width: 60px;
       height: 2px;
@@ -426,6 +482,9 @@
         transform: none !important;
         filter: none !important;
       }
+      .ember-divider .ember-line { width: 80px !important; }
+      .ember-divider .ember-glow { opacity: 0.6 !important; }
+      .ember-divider .ember-spark { display: none; }
       #particles { display: none; }
       .memory::before { display: none; }
     }
@@ -464,7 +523,13 @@
       </div>
     </section>
 
-    <hr class="divider reveal" />
+    <div class="ember-divider">
+      <span class="ember-line"></span>
+      <span class="ember-glow"></span>
+      <span class="ember-spark" style="--sx:-3px;--ex:-8px;--spark-dur:2s;--spark-delay:0.2s"></span>
+      <span class="ember-spark" style="--sx:2px;--ex:6px;--spark-dur:2.4s;--spark-delay:0.6s"></span>
+      <span class="ember-spark" style="--sx:0;--ex:-4px;--spark-dur:1.9s;--spark-delay:1s"></span>
+    </div>
 
     <!-- Memory 2 — Horse video (video right, text left) -->
     <section class="memory reverse" style="--vignette-delay: 1s">
@@ -541,9 +606,7 @@
 
   <!-- ─── MUSIC PLAYER ─── -->
   <div id="player">
-    <button id="btnPrev" aria-label="Previous song">⏮</button>
     <button id="btnPlay" class="play-btn" aria-label="Play / Pause">▶</button>
-    <button id="btnNext" aria-label="Next song">⏭</button>
     <span class="song-name" id="songName">—</span>
   </div>
 
@@ -556,91 +619,22 @@
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ════════════════ PLAYLIST ════════════════ */
-    const playlist = [
-      { src: 'media/song-zulfein.mp3',      name: 'Zulfein' },
-      { src: 'media/song-meribaaton.mp3',   name: 'Meri Baaton' },
-      { src: 'media/song-arzkiyahai.mp3',   name: 'Arz Ki Ya Hai' },
-      { src: 'media/song-inaam.mp3',        name: 'Inaam' },
-    ];
-    let currentTrack = 0;
+    /* ════════════════ SINGLE SONG (LOOP) ════════════════ */
     let isPlaying = false;
-    const TRACK_DURATION = 20000;
-    const FADE_MS = 500;
-    let trackTimer = null;
-    let fadeInterval = null;
-    const TARGET_VOLUME = 1.0;
 
     const audio     = document.getElementById('audio');
     const btnPlay   = document.getElementById('btnPlay');
-    const btnPrev   = document.getElementById('btnPrev');
-    const btnNext   = document.getElementById('btnNext');
     const songName  = document.getElementById('songName');
     const player    = document.getElementById('player');
 
-    function loadTrack(index) {
-      currentTrack = ((index % playlist.length) + playlist.length) % playlist.length;
-      audio.src = playlist[currentTrack].src;
-      audio.volume = TARGET_VOLUME;
-      songName.textContent = playlist[currentTrack].name;
-    }
-
-    /* ── Fade helpers ── */
-    function fadeOut(cb) {
-      clearInterval(fadeInterval);
-      const steps = 20;
-      const stepTime = FADE_MS / steps;
-      const decrement = audio.volume / steps;
-      fadeInterval = setInterval(() => {
-        if (audio.volume - decrement <= 0) {
-          audio.volume = 0;
-          clearInterval(fadeInterval);
-          cb();
-        } else {
-          audio.volume = Math.max(0, audio.volume - decrement);
-        }
-      }, stepTime);
-    }
-
-    function fadeIn() {
-      clearInterval(fadeInterval);
-      audio.volume = 0;
-      const steps = 20;
-      const stepTime = FADE_MS / steps;
-      const increment = TARGET_VOLUME / steps;
-      fadeInterval = setInterval(() => {
-        if (audio.volume + increment >= TARGET_VOLUME) {
-          audio.volume = TARGET_VOLUME;
-          clearInterval(fadeInterval);
-        } else {
-          audio.volume = Math.min(TARGET_VOLUME, audio.volume + increment);
-        }
-      }, stepTime);
-    }
-
-    /* ── Timer-based track advance ── */
-    function resetTrackTimer() {
-      clearTimeout(trackTimer);
-      if (isPlaying) {
-        trackTimer = setTimeout(() => { advanceTrack(); }, TRACK_DURATION);
-      }
-    }
-
-    function advanceTrack() {
-      fadeOut(() => {
-        loadTrack(currentTrack + 1);
-        audio.play().then(() => {
-          fadeIn();
-          resetTrackTimer();
-        }).catch(() => {});
-      });
-    }
+    audio.src = 'media/song-zulfein.mp3';
+    audio.loop = true;
+    songName.textContent = 'Zulfein';
 
     function play() {
       audio.play().then(() => {
         isPlaying = true;
         btnPlay.textContent = '⏸';
-        resetTrackTimer();
       }).catch(() => {});
     }
 
@@ -648,21 +642,9 @@
       audio.pause();
       isPlaying = false;
       btnPlay.textContent = '▶';
-      clearTimeout(trackTimer);
     }
 
     btnPlay.addEventListener('click', () => { isPlaying ? pause() : play(); });
-    btnNext.addEventListener('click', () => {
-      clearTimeout(trackTimer); clearInterval(fadeInterval);
-      loadTrack(currentTrack + 1); play();
-    });
-    btnPrev.addEventListener('click', () => {
-      clearTimeout(trackTimer); clearInterval(fadeInterval);
-      loadTrack(currentTrack - 1); play();
-    });
-    audio.addEventListener('ended', () => {
-      clearTimeout(trackTimer); loadTrack(currentTrack + 1); play();
-    });
 
     /* ════════════════ GATE ════════════════ */
     const gate     = document.getElementById('gate');
@@ -671,7 +653,6 @@
     btnBegin.addEventListener('click', () => {
       gate.classList.add('hidden');
       document.body.style.overflow = '';
-      loadTrack(0);
       play();
       player.classList.add('show');
       initReveal();
@@ -777,7 +758,7 @@
     /* ════════════════ CINEMATIC SCROLL REVEAL ════════════════ */
     function initReveal() {
       if (prefersReduced) {
-        document.querySelectorAll('.reveal, .reveal-media, .reveal-text').forEach(el => {
+        document.querySelectorAll('.reveal, .reveal-media, .reveal-text, .ember-divider').forEach(el => {
           el.classList.add('visible');
         });
         return;
@@ -792,7 +773,7 @@
         });
       }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
 
-      document.querySelectorAll('.reveal, .reveal-media, .reveal-text').forEach(el => {
+      document.querySelectorAll('.reveal, .reveal-media, .reveal-text, .ember-divider').forEach(el => {
         observer.observe(el);
       });
     }
