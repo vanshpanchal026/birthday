@@ -56,9 +56,16 @@
       background: var(--bg);
       text-align: center;
       padding: 2rem;
-      transition: opacity 0.9s ease, visibility 0.9s ease;
+      transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.9s cubic-bezier(0.4, 0, 0.2, 1),
+                  visibility 0.9s ease;
     }
-    #gate.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #gate.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: scale(1.04);
+    }
 
     #gate h1 {
       font-family: var(--serif);
@@ -67,7 +74,13 @@
       color: var(--gold);
       margin-bottom: 1rem;
       letter-spacing: 0.02em;
+      animation: gate-text-breathe 3.5s ease-in-out infinite;
     }
+    @keyframes gate-text-breathe {
+      0%, 100% { text-shadow: 0 0 20px rgba(227,185,110,0.15), 0 0 60px rgba(227,185,110,0.05); }
+      50%      { text-shadow: 0 0 30px rgba(227,185,110,0.35), 0 0 80px rgba(227,185,110,0.12); }
+    }
+
     #gate p {
       font-family: var(--serif);
       font-style: italic;
@@ -166,15 +179,38 @@
       align-items: center;
       margin-bottom: var(--section-gap);
       padding: clamp(1.5rem, 3vw, 3rem) 0;
+      position: relative;
     }
     .memory.reverse .memory-media { order: 2; }
     .memory.reverse .memory-text  { order: 1; }
+
+    /* Warm vignette glow behind each memory section */
+    .memory::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 120%; height: 120%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(ellipse at center,
+        rgba(227,185,110,0.04) 0%,
+        rgba(214,122,138,0.02) 30%,
+        transparent 65%);
+      pointer-events: none;
+      z-index: -1;
+      animation: vignette-breathe 6s ease-in-out infinite;
+      animation-delay: var(--vignette-delay, 0s);
+    }
+    @keyframes vignette-breathe {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.08); }
+    }
 
     .memory-media {
       border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 8px 40px rgba(0,0,0,0.5);
       position: relative;
+      will-change: transform;
     }
     .memory-media::after {
       content: '';
@@ -223,11 +259,13 @@
       font-size: 3.6rem;
       display: block;
       margin-bottom: 1.6rem;
-      animation: float-cake 3s ease-in-out infinite;
+      animation: cake-pulse 2.5s ease-in-out infinite;
     }
-    @keyframes float-cake {
-      0%, 100% { transform: translateY(0); }
-      50%      { transform: translateY(-10px); }
+    @keyframes cake-pulse {
+      0%, 100% { transform: translateY(0) scale(1); }
+      30%      { transform: translateY(-12px) scale(1.08); }
+      50%      { transform: translateY(-4px) scale(1.02); }
+      70%      { transform: translateY(-8px) scale(1.05); }
     }
     .wish p {
       font-family: var(--serif);
@@ -246,6 +284,18 @@
       font-style: normal;
     }
 
+    /* Staggered wish line reveal */
+    .wish-line {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .wish-line.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     /* ── Footer ── */
     .footer {
       text-align: center;
@@ -255,15 +305,41 @@
       font-family: var(--sans);
     }
 
-    /* ───────────────────────── SCROLL REVEAL ───────────────────────── */
+    /* ───────────────────────── CINEMATIC REVEAL ───────────────────────── */
+    /* Media: scale + blur + fade */
+    .reveal-media {
+      opacity: 0;
+      transform: scale(0.92);
+      filter: blur(4px);
+      transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+                  filter 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal-media.visible {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+
+    /* Text: delayed slide-up + fade */
+    .reveal-text {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s,
+                  transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+    }
+    .reveal-text.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Generic reveal (hero, dividers) */
     .reveal {
       opacity: 0;
       transform: translateY(50px);
       transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
                   transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    .reveal.from-left  { transform: translateX(-60px) translateY(0); }
-    .reveal.from-right { transform: translateX(60px) translateY(0); }
     .reveal.visible {
       opacity: 1;
       transform: translate(0, 0);
@@ -335,11 +411,6 @@
         padding: 0.45rem 0.8rem 0.45rem 1rem;
       }
       #player .song-name { max-width: 100px; font-size: 0.72rem; }
-
-      .reveal.from-left,
-      .reveal.from-right {
-        transform: translateY(40px) translateX(0);
-      }
     }
 
     /* ───────────────────────── REDUCED MOTION ───────────────────────── */
@@ -348,9 +419,15 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+        transition-delay: 0ms !important;
       }
-      .reveal { opacity: 1; transform: none; }
+      .reveal, .reveal-media, .reveal-text, .wish-line {
+        opacity: 1 !important;
+        transform: none !important;
+        filter: none !important;
+      }
       #particles { display: none; }
+      .memory::before { display: none; }
     }
   </style>
 </head>
@@ -378,11 +455,11 @@
     </section>
 
     <!-- Memory 1 — Coffee (image left, text right) -->
-    <section class="memory">
-      <div class="memory-media reveal from-left">
+    <section class="memory" style="--vignette-delay: 0s">
+      <div class="memory-media reveal-media" data-parallax>
         <img src="media/img-coffee.png" alt="Coffee together" loading="lazy" />
       </div>
-      <div class="memory-text reveal from-right">
+      <div class="memory-text reveal-text">
         Sometimes happiness isn't in big surprises. It's in sitting across from someone who makes an ordinary coffee break feel special. This picture reminds me of exactly that.
       </div>
     </section>
@@ -390,11 +467,11 @@
     <hr class="divider reveal" />
 
     <!-- Memory 2 — Horse video (video right, text left) -->
-    <section class="memory reverse">
-      <div class="memory-media reveal from-right">
+    <section class="memory reverse" style="--vignette-delay: 1s">
+      <div class="memory-media reveal-media" data-parallax>
         <video src="media/vid-horse.mp4" controls preload="metadata" playsinline muted></video>
       </div>
-      <div class="memory-text reveal from-left">
+      <div class="memory-text reveal-text">
         I think horse riding ended up being my favorite part of the day. Seeing you laugh, enjoy yourself, and forget everything else for a while made me happier than I expected. That's the version of you I'll always remember.
       </div>
     </section>
@@ -402,11 +479,11 @@
     <hr class="divider reveal" />
 
     <!-- Memory 3 — Cheers (image left, text right) -->
-    <section class="memory">
-      <div class="memory-media reveal from-left">
+    <section class="memory" style="--vignette-delay: 2s">
+      <div class="memory-media reveal-media" data-parallax>
         <img src="media/img-cheers.jpg" alt="Cheers moment" loading="lazy" />
       </div>
-      <div class="memory-text reveal from-right">
+      <div class="memory-text reveal-text">
         I don't think I'll remember what we were drinking as much as I'll remember that smile. It was such a small moment, but somehow it became one of my favorite memories from the day.
       </div>
     </section>
@@ -414,11 +491,11 @@
     <hr class="divider reveal" />
 
     <!-- Memory 4 — Selfie (video right, text left) -->
-    <section class="memory reverse">
-      <div class="memory-media reveal from-right">
+    <section class="memory reverse" style="--vignette-delay: 3s">
+      <div class="memory-media reveal-media" data-parallax>
         <img src="media/img-selfie.png" alt="Our selfie" loading="lazy" />
       </div>
-      <div class="memory-text reveal from-left">
+      <div class="memory-text reveal-text">
         Some memories aren't special because the picture is perfect. They're special because of how they make you feel when you look at them again.
       </div>
     </section>
@@ -426,11 +503,11 @@
     <hr class="divider reveal" />
 
     <!-- Memory 5 — Party (image left, text right) -->
-    <section class="memory">
-      <div class="memory-media reveal from-left">
+    <section class="memory" style="--vignette-delay: 4s">
+      <div class="memory-media reveal-media" data-parallax>
         <img src="media/img-party.png" alt="Party time" loading="lazy" />
       </div>
-      <div class="memory-text reveal from-right">
+      <div class="memory-text reveal-text">
         It's funny how one picture can bring back an entire day. Looking at this, I can almost replay everything we did — and honestly, I'm really grateful we got to make those memories together.
       </div>
     </section>
@@ -438,20 +515,25 @@
     <hr class="divider reveal" />
 
     <!-- Memory 6 — Recap video (video right, text left) -->
-    <section class="memory reverse">
-      <div class="memory-media reveal from-right">
+    <section class="memory reverse" style="--vignette-delay: 5s">
+      <div class="memory-media reveal-media" data-parallax>
         <video src="media/vid-recap.mp4" controls preload="metadata" playsinline muted></video>
       </div>
-      <div class="memory-text reveal from-left">
+      <div class="memory-text reveal-text">
         Yesterday reminded me that the best memories aren't always made in extraordinary places — they're made with the right person. From coffee to the movie, from random laughs to the ride back home, every little moment made the day feel special. Thank you for giving me a day I'll always remember.
       </div>
     </section>
 
     <!-- Final Wish -->
-    <section class="wish reveal">
-      <span class="emoji">🎂</span>
-      <span class="name-line">Happy Birthday Riku ❤️</span>
-      <p>I hope every new year of your life gives you something worth remembering: a new dream, a new adventure, and moments that make you smile for no reason. Take care of yourself more than you have taken till now, keep shining, and enjoy your special day, babe.</p>
+    <section class="wish" id="wishSection">
+      <span class="emoji wish-line">🎂</span>
+      <span class="name-line wish-line">Happy Birthday Riku ❤️</span>
+      <p>
+        <span class="wish-line">I hope every new year of your life gives you something worth remembering:</span>
+        <span class="wish-line">a new dream, a new adventure, and moments that make you smile for no reason.</span>
+        <span class="wish-line">Take care of yourself more than you have taken till now, keep shining,</span>
+        <span class="wish-line">and enjoy your special day, babe.</span>
+      </p>
     </section>
 
     <div class="footer">made with love ♥</div>
@@ -472,6 +554,8 @@
   (function () {
     'use strict';
 
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     /* ════════════════ PLAYLIST ════════════════ */
     const playlist = [
       { src: 'media/song-zulfein.mp3',      name: 'Zulfein' },
@@ -481,8 +565,8 @@
     ];
     let currentTrack = 0;
     let isPlaying = false;
-    const TRACK_DURATION = 20000;       // 20 seconds per track
-    const FADE_MS = 500;                // fade-out/fade-in duration
+    const TRACK_DURATION = 20000;
+    const FADE_MS = 500;
     let trackTimer = null;
     let fadeInterval = null;
     const TARGET_VOLUME = 1.0;
@@ -538,9 +622,7 @@
     function resetTrackTimer() {
       clearTimeout(trackTimer);
       if (isPlaying) {
-        trackTimer = setTimeout(() => {
-          advanceTrack();
-        }, TRACK_DURATION);
+        trackTimer = setTimeout(() => { advanceTrack(); }, TRACK_DURATION);
       }
     }
 
@@ -569,27 +651,17 @@
       clearTimeout(trackTimer);
     }
 
-    btnPlay.addEventListener('click', () => {
-      isPlaying ? pause() : play();
-    });
+    btnPlay.addEventListener('click', () => { isPlaying ? pause() : play(); });
     btnNext.addEventListener('click', () => {
-      clearTimeout(trackTimer);
-      clearInterval(fadeInterval);
-      loadTrack(currentTrack + 1);
-      play();
+      clearTimeout(trackTimer); clearInterval(fadeInterval);
+      loadTrack(currentTrack + 1); play();
     });
     btnPrev.addEventListener('click', () => {
-      clearTimeout(trackTimer);
-      clearInterval(fadeInterval);
-      loadTrack(currentTrack - 1);
-      play();
+      clearTimeout(trackTimer); clearInterval(fadeInterval);
+      loadTrack(currentTrack - 1); play();
     });
-
-    // If a track naturally ends before the 20s timer (short file), advance
     audio.addEventListener('ended', () => {
-      clearTimeout(trackTimer);
-      loadTrack(currentTrack + 1);
-      play();
+      clearTimeout(trackTimer); loadTrack(currentTrack + 1); play();
     });
 
     /* ════════════════ GATE ════════════════ */
@@ -605,15 +677,15 @@
       initReveal();
       initParticles();
       initVideoAutoplay();
-      // Start auto-scroll after a brief delay so the gate finishes fading
+      initParallax();
+      initWishReveal();
       setTimeout(() => startAutoScroll(), 1000);
     });
 
-    // Lock scroll while gate is visible
     document.body.style.overflow = 'hidden';
 
-    /* ════════════════ AUTO-SCROLL ════════════════ */
-    const SCROLL_PX_PER_SEC = 50;       // ~50px/s
+    /* ════════════════ AUTO-SCROLL (100px/s) ════════════════ */
+    const SCROLL_PX_PER_SEC = 100;
     let autoScrollActive = false;
     let autoScrollPaused = false;
     let resumeTimer = null;
@@ -623,21 +695,17 @@
     let isPlayerHovered = false;
 
     function startAutoScroll() {
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced) return;
-
       autoScrollActive = true;
       autoScrollPaused = false;
       lastScrollTime = performance.now();
       scrollRAF = requestAnimationFrame(autoScrollTick);
 
-      // Detect user manual scroll → pause auto-scroll
       const pauseEvents = ['wheel', 'touchstart', 'touchmove', 'pointerdown'];
       pauseEvents.forEach(evt => {
         window.addEventListener(evt, onUserScroll, { passive: true });
       });
 
-      // Pause when hovering the music player
       player.addEventListener('mouseenter', () => { isPlayerHovered = true; });
       player.addEventListener('mouseleave', () => { isPlayerHovered = false; });
       player.addEventListener('touchstart', () => { isPlayerHovered = true; }, { passive: true });
@@ -645,7 +713,6 @@
         setTimeout(() => { isPlayerHovered = false; }, 1500);
       }, { passive: true });
 
-      // Detect fullscreen changes (for video fullscreen)
       document.addEventListener('fullscreenchange', onFullscreenChange);
       document.addEventListener('webkitfullscreenchange', onFullscreenChange);
     }
@@ -661,9 +728,11 @@
 
       const delta = (now - lastScrollTime) / 1000;
       lastScrollTime = now;
-      const px = SCROLL_PX_PER_SEC * delta;
 
-      // Stop at bottom
+      // Clamp delta to avoid huge jumps after tab switch
+      const clampedDelta = Math.min(delta, 0.1);
+      const px = SCROLL_PX_PER_SEC * clampedDelta;
+
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (window.scrollY >= maxScroll) return;
 
@@ -674,7 +743,6 @@
       if (!autoScrollActive) return;
       autoScrollPaused = true;
       clearTimeout(resumeTimer);
-      // Resume auto-scroll after 3 seconds of no interaction
       resumeTimer = setTimeout(() => {
         autoScrollPaused = false;
         lastScrollTime = performance.now();
@@ -682,12 +750,8 @@
     }
 
     function onFullscreenChange() {
-      isVideoFullscreen = !!(
-        document.fullscreenElement || document.webkitFullscreenElement
-      );
-      if (!isVideoFullscreen) {
-        lastScrollTime = performance.now();
-      }
+      isVideoFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isVideoFullscreen) lastScrollTime = performance.now();
     }
 
     /* ════════════════ VIDEO AUTOPLAY ON SCROLL ════════════════ */
@@ -699,11 +763,9 @@
         entries.forEach(entry => {
           const video = entry.target;
           if (entry.isIntersecting) {
-            // Autoplay muted when scrolled into view
             video.muted = true;
             video.play().catch(() => {});
           } else {
-            // Pause when scrolled out of view
             video.pause();
           }
         });
@@ -712,11 +774,12 @@
       videos.forEach(v => observer.observe(v));
     }
 
-    /* ════════════════ SCROLL REVEAL ════════════════ */
+    /* ════════════════ CINEMATIC SCROLL REVEAL ════════════════ */
     function initReveal() {
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced) {
-        document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+        document.querySelectorAll('.reveal, .reveal-media, .reveal-text').forEach(el => {
+          el.classList.add('visible');
+        });
         return;
       }
 
@@ -727,14 +790,74 @@
             observer.unobserve(entry.target);
           }
         });
-      }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+      }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
 
-      document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+      document.querySelectorAll('.reveal, .reveal-media, .reveal-text').forEach(el => {
+        observer.observe(el);
+      });
     }
 
-    /* ════════════════ PARTICLES ════════════════ */
+    /* ════════════════ PARALLAX DRIFT ON MEDIA ════════════════ */
+    function initParallax() {
+      if (prefersReduced) return;
+
+      const parallaxEls = document.querySelectorAll('[data-parallax]');
+      if (!parallaxEls.length) return;
+
+      function updateParallax() {
+        const scrollY = window.scrollY;
+        const viewH = window.innerHeight;
+
+        parallaxEls.forEach(el => {
+          const rect = el.getBoundingClientRect();
+          // Only process if element is near the viewport
+          if (rect.bottom < -200 || rect.top > viewH + 200) return;
+
+          // Calculate how far through the viewport the element is
+          // 0 = just entering bottom, 1 = just leaving top
+          const progress = (viewH - rect.top) / (viewH + rect.height);
+          // Parallax offset: media moves slower, creating depth
+          // Range: -20px to +20px
+          const offset = (progress - 0.5) * 40 * 0.15;
+
+          el.style.transform = `translateY(${offset}px)`;
+        });
+
+        requestAnimationFrame(updateParallax);
+      }
+
+      requestAnimationFrame(updateParallax);
+    }
+
+    /* ════════════════ STAGGERED WISH REVEAL ════════════════ */
+    function initWishReveal() {
+      if (prefersReduced) {
+        document.querySelectorAll('.wish-line').forEach(el => el.classList.add('visible'));
+        return;
+      }
+
+      const wishLines = document.querySelectorAll('.wish-line');
+      let wishRevealed = false;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && !wishRevealed) {
+            wishRevealed = true;
+            wishLines.forEach((line, i) => {
+              setTimeout(() => {
+                line.classList.add('visible');
+              }, i * 350);   // 350ms stagger between each line
+            });
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.2 });
+
+      observer.observe(document.getElementById('wishSection'));
+    }
+
+    /* ════════════════ PARTICLES (more alive) ════════════════ */
     function initParticles() {
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced) return;
 
       const canvas = document.getElementById('particles');
@@ -748,17 +871,43 @@
       resize();
       window.addEventListener('resize', resize);
 
-      const COUNT = Math.min(60, Math.floor(window.innerWidth / 18));
+      const COUNT = Math.min(75, Math.floor(window.innerWidth / 14));
 
       for (let i = 0; i < COUNT; i++) {
+        // More varied sizes and behaviors for an organic look
+        const sizeClass = Math.random();
+        let r, speed, opacity;
+
+        if (sizeClass < 0.15) {
+          // Large warm orbs (rare)
+          r = Math.random() * 2.5 + 2.5;
+          speed = Math.random() * 0.15 + 0.06;
+          opacity = Math.random() * 0.15 + 0.05;
+        } else if (sizeClass < 0.5) {
+          // Medium fairy lights
+          r = Math.random() * 1.5 + 1.2;
+          speed = Math.random() * 0.35 + 0.15;
+          opacity = Math.random() * 0.4 + 0.12;
+        } else {
+          // Small dust motes (most common)
+          r = Math.random() * 0.8 + 0.4;
+          speed = Math.random() * 0.55 + 0.2;
+          opacity = Math.random() * 0.35 + 0.08;
+        }
+
         particles.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: Math.random() * 2 + 0.8,
-          speed: Math.random() * 0.35 + 0.12,
-          drift: (Math.random() - 0.5) * 0.3,
-          opacity: Math.random() * 0.45 + 0.1,
+          r: r,
+          speed: speed,
+          drift: (Math.random() - 0.5) * 0.45,
+          driftSpeed: Math.random() * 0.008 + 0.003,    // how fast drift oscillates
+          driftPhase: Math.random() * Math.PI * 2,
+          opacity: opacity,
           flicker: Math.random() * Math.PI * 2,
+          flickerSpeed: Math.random() * 0.03 + 0.008,   // varied flicker speeds
+          // Some particles have a warm rose tint
+          isRose: Math.random() < 0.2,
         });
       }
 
@@ -766,18 +915,35 @@
         ctx.clearRect(0, 0, W, H);
         particles.forEach(p => {
           p.y -= p.speed;
-          p.x += p.drift;
-          p.flicker += 0.015;
+          // Oscillating drift for organic lateral movement
+          p.driftPhase += p.driftSpeed;
+          p.x += p.drift + Math.sin(p.driftPhase) * 0.25;
+          p.flicker += p.flickerSpeed;
 
           if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
           if (p.x < -10) p.x = W + 10;
           if (p.x > W + 10) p.x = -10;
 
-          const alpha = p.opacity * (0.65 + 0.35 * Math.sin(p.flicker));
+          const alpha = p.opacity * (0.5 + 0.5 * Math.sin(p.flicker));
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(227, 185, 110, ${alpha})`;
+
+          if (p.isRose) {
+            ctx.fillStyle = `rgba(214, 122, 138, ${alpha * 0.7})`;
+          } else {
+            ctx.fillStyle = `rgba(227, 185, 110, ${alpha})`;
+          }
           ctx.fill();
+
+          // Add a soft glow halo on larger particles
+          if (p.r > 2) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2);
+            ctx.fillStyle = p.isRose
+              ? `rgba(214, 122, 138, ${alpha * 0.06})`
+              : `rgba(227, 185, 110, ${alpha * 0.08})`;
+            ctx.fill();
+          }
         });
         requestAnimationFrame(draw);
       }
