@@ -700,13 +700,12 @@
     let isPlayerHovered = false;
 
     function startAutoScroll() {
-      if (prefersReduced) return;
       autoScrollActive = true;
       autoScrollPaused = false;
       lastScrollTime = performance.now();
       scrollRAF = requestAnimationFrame(autoScrollTick);
 
-      const pauseEvents = ['wheel', 'touchstart', 'touchmove', 'pointerdown'];
+      const pauseEvents = ['wheel', 'touchmove'];
       pauseEvents.forEach(evt => {
         window.addEventListener(evt, onUserScroll, { passive: true });
       });
@@ -748,8 +747,10 @@
       window.scrollBy({ top: px, left: 0 });
     }
 
-    function onUserScroll() {
+    function onUserScroll(e) {
       if (!autoScrollActive) return;
+      if (e && e.type === 'wheel' && e.deltaY === 0) return;
+
       autoScrollPaused = true;
       clearTimeout(resumeTimer);
       resumeTimer = setTimeout(() => {
