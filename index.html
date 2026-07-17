@@ -541,7 +541,13 @@
       </div>
     </section>
 
-    <hr class="divider reveal" />
+    <div class="ember-divider">
+      <span class="ember-line"></span>
+      <span class="ember-glow"></span>
+      <span class="ember-spark" style="--sx:-3px;--ex:-8px;--spark-dur:2s;--spark-delay:0.2s"></span>
+      <span class="ember-spark" style="--sx:2px;--ex:6px;--spark-dur:2.4s;--spark-delay:0.6s"></span>
+      <span class="ember-spark" style="--sx:0;--ex:-4px;--spark-dur:1.9s;--spark-delay:1s"></span>
+    </div>
 
     <!-- Memory 3 — Cheers (image left, text right) -->
     <section class="memory" style="--vignette-delay: 2s">
@@ -553,7 +559,13 @@
       </div>
     </section>
 
-    <hr class="divider reveal" />
+    <div class="ember-divider">
+      <span class="ember-line"></span>
+      <span class="ember-glow"></span>
+      <span class="ember-spark" style="--sx:-3px;--ex:-8px;--spark-dur:2s;--spark-delay:0.2s"></span>
+      <span class="ember-spark" style="--sx:2px;--ex:6px;--spark-dur:2.4s;--spark-delay:0.6s"></span>
+      <span class="ember-spark" style="--sx:0;--ex:-4px;--spark-dur:1.9s;--spark-delay:1s"></span>
+    </div>
 
     <!-- Memory 4 — Selfie (video right, text left) -->
     <section class="memory reverse" style="--vignette-delay: 3s">
@@ -565,7 +577,13 @@
       </div>
     </section>
 
-    <hr class="divider reveal" />
+    <div class="ember-divider">
+      <span class="ember-line"></span>
+      <span class="ember-glow"></span>
+      <span class="ember-spark" style="--sx:-3px;--ex:-8px;--spark-dur:2s;--spark-delay:0.2s"></span>
+      <span class="ember-spark" style="--sx:2px;--ex:6px;--spark-dur:2.4s;--spark-delay:0.6s"></span>
+      <span class="ember-spark" style="--sx:0;--ex:-4px;--spark-dur:1.9s;--spark-delay:1s"></span>
+    </div>
 
     <!-- Memory 5 — Party (image left, text right) -->
     <section class="memory" style="--vignette-delay: 4s">
@@ -577,7 +595,13 @@
       </div>
     </section>
 
-    <hr class="divider reveal" />
+    <div class="ember-divider">
+      <span class="ember-line"></span>
+      <span class="ember-glow"></span>
+      <span class="ember-spark" style="--sx:-3px;--ex:-8px;--spark-dur:2s;--spark-delay:0.2s"></span>
+      <span class="ember-spark" style="--sx:2px;--ex:6px;--spark-dur:2.4s;--spark-delay:0.6s"></span>
+      <span class="ember-spark" style="--sx:0;--ex:-4px;--spark-dur:1.9s;--spark-delay:1s"></span>
+    </div>
 
     <!-- Memory 6 — Recap video (video right, text left) -->
     <section class="memory reverse" style="--vignette-delay: 5s">
@@ -715,7 +739,11 @@
       const px = SCROLL_PX_PER_SEC * clampedDelta;
 
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (window.scrollY >= maxScroll) return;
+      if (window.scrollY >= maxScroll - 1) {
+        window.scrollTo({ top: maxScroll });
+        autoScrollActive = false;
+        return;
+      }
 
       window.scrollBy({ top: px, left: 0 });
     }
@@ -735,7 +763,6 @@
       if (!isVideoFullscreen) lastScrollTime = performance.now();
     }
 
-    /* ════════════════ VIDEO AUTOPLAY ON SCROLL ════════════════ */
     function initVideoAutoplay() {
       const videos = document.querySelectorAll('video');
       if (!videos.length) return;
@@ -745,6 +772,7 @@
           const video = entry.target;
           if (entry.isIntersecting) {
             video.muted = true;
+            video.volume = 0;
             video.play().catch(() => {});
           } else {
             video.pause();
@@ -752,7 +780,20 @@
         });
       }, { threshold: 0.4 });
 
-      videos.forEach(v => observer.observe(v));
+      videos.forEach(v => {
+        observer.observe(v);
+        // Pause background music if user manually plays/unmutes the video to prevent voice overlap
+        v.addEventListener('volumechange', () => {
+          if (!v.muted && v.volume > 0 && !v.paused) {
+            pause();
+          }
+        });
+        v.addEventListener('play', () => {
+          if (!v.muted && v.volume > 0) {
+            pause();
+          }
+        });
+      });
     }
 
     /* ════════════════ CINEMATIC SCROLL REVEAL ════════════════ */
