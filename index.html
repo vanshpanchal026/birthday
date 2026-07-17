@@ -651,9 +651,9 @@
     const songName  = document.getElementById('songName');
     const player    = document.getElementById('player');
 
-    audio.src = 'media/song-zulfein.mp3';
+    audio.src = 'media/song-meribaaton.mp3';
     audio.loop = true;
-    songName.textContent = 'Zulfein';
+    songName.textContent = 'Meri Baaton';
 
     function play() {
       audio.play().then(() => {
@@ -782,6 +782,8 @@
 
       videos.forEach(v => {
         observer.observe(v);
+        v.muted = true;
+        v.volume = 0;
         // Pause background music if user manually plays/unmutes the video to prevent voice overlap
         v.addEventListener('volumechange', () => {
           if (!v.muted && v.volume > 0 && !v.paused) {
@@ -789,7 +791,9 @@
           }
         });
         v.addEventListener('play', () => {
-          if (!v.muted && v.volume > 0) {
+          if (v.muted) {
+            v.volume = 0;
+          } else if (!v.muted && v.volume > 0) {
             pause();
           }
         });
