@@ -392,7 +392,7 @@
     <!-- Memory 2 — Horse video (video right, text left) -->
     <section class="memory reverse">
       <div class="memory-media reveal from-right">
-        <video src="media/vid-horse.mp4" controls preload="metadata" playsinline></video>
+        <video src="media/vid-horse.mp4" controls preload="metadata" playsinline muted></video>
       </div>
       <div class="memory-text reveal from-left">
         I think horse riding ended up being my favorite part of the day. Seeing you laugh, enjoy yourself, and forget everything else for a while made me happier than I expected. That's the version of you I'll always remember.
@@ -440,7 +440,7 @@
     <!-- Memory 6 — Recap video (video right, text left) -->
     <section class="memory reverse">
       <div class="memory-media reveal from-right">
-        <video src="media/vid-recap.mp4" controls preload="metadata" playsinline></video>
+        <video src="media/vid-recap.mp4" controls preload="metadata" playsinline muted></video>
       </div>
       <div class="memory-text reveal from-left">
         Yesterday reminded me that the best memories aren't always made in extraordinary places — they're made with the right person. From coffee to the movie, from random laughs to the ride back home, every little moment made the day feel special. Thank you for giving me a day I'll always remember.
@@ -481,6 +481,11 @@
     ];
     let currentTrack = 0;
     let isPlaying = false;
+    const TRACK_DURATION = 20000;       // 20 seconds per track
+    const FADE_MS = 500;                // fade-out/fade-in duration
+    let trackTimer = null;
+    let fadeInterval = null;
+    const TARGET_VOLUME = 1.0;
 
     const audio     = document.getElementById('audio');
     const btnPlay   = document.getElementById('btnPlay');
@@ -492,13 +497,68 @@
     function loadTrack(index) {
       currentTrack = ((index % playlist.length) + playlist.length) % playlist.length;
       audio.src = playlist[currentTrack].src;
+      audio.volume = TARGET_VOLUME;
       songName.textContent = playlist[currentTrack].name;
+    }
+
+    /* ── Fade helpers ── */
+    function fadeOut(cb) {
+      clearInterval(fadeInterval);
+      const steps = 20;
+      const stepTime = FADE_MS / steps;
+      const decrement = audio.volume / steps;
+      fadeInterval = setInterval(() => {
+        if (audio.volume - decrement <= 0) {
+          audio.volume = 0;
+          clearInterval(fadeInterval);
+          cb();
+        } else {
+          audio.volume = Math.max(0, audio.volume - decrement);
+        }
+      }, stepTime);
+    }
+
+    function fadeIn() {
+      clearInterval(fadeInterval);
+      audio.volume = 0;
+      const steps = 20;
+      const stepTime = FADE_MS / steps;
+      const increment = TARGET_VOLUME / steps;
+      fadeInterval = setInterval(() => {
+        if (audio.volume + increment >= TARGET_VOLUME) {
+          audio.volume = TARGET_VOLUME;
+          clearInterval(fadeInterval);
+        } else {
+          audio.volume = Math.min(TARGET_VOLUME, audio.volume + increment);
+        }
+      }, stepTime);
+    }
+
+    /* ── Timer-based track advance ── */
+    function resetTrackTimer() {
+      clearTimeout(trackTimer);
+      if (isPlaying) {
+        trackTimer = setTimeout(() => {
+          advanceTrack();
+        }, TRACK_DURATION);
+      }
+    }
+
+    function advanceTrack() {
+      fadeOut(() => {
+        loadTrack(currentTrack + 1);
+        audio.play().then(() => {
+          fadeIn();
+          resetTrackTimer();
+        }).catch(() => {});
+      });
     }
 
     function play() {
       audio.play().then(() => {
         isPlaying = true;
         btnPlay.textContent = '⏸';
+        resetTrackTimer();
       }).catch(() => {});
     }
 
@@ -506,13 +566,31 @@
       audio.pause();
       isPlaying = false;
       btnPlay.textContent = '▶';
+      clearTimeout(trackTimer);
     }
 
-    btnPlay.addEventListener('click', () => isPlaying ? pause() : play());
-    btnNext.addEventListener('click', () => { loadTrack(currentTrack + 1); play(); });
-    btnPrev.addEventListener('click', () => { loadTrack(currentTrack - 1); play(); });
+    btnPlay.addEventListener('click', () => {
+      isPlaying ? pause() : play();
+    });
+    btnNext.addEventListener('click', () => {
+      clearTimeout(trackTimer);
+      clearInterval(fadeInterval);
+      loadTrack(currentTrack + 1);
+      play();
+    });
+    btnPrev.addEventListener('click', () => {
+      clearTimeout(trackTimer);
+      clearInterval(fadeInterval);
+      loadTrack(currentTrack - 1);
+      play();
+    });
 
-    audio.addEventListener('ended', () => { loadTrack(currentTrack + 1); play(); });
+    // If a track naturally ends before the 20s timer (short file), advance
+    audio.addEventListener('ended', () => {
+      clearTimeout(trackTimer);
+      loadTrack(currentTrack + 1);
+      play();
+    });
 
     /* ════════════════ GATE ════════════════ */
     const gate     = document.getElementById('gate');
@@ -524,12 +602,115 @@
       loadTrack(0);
       play();
       player.classList.add('show');
-      initReveal();          // start observing after gate hides
-      initParticles();       // start particle animation
+      initReveal();
+      initParticles();
+      initVideoAutoplay();
+      // Start auto-scroll after a brief delay so the gate finishes fading
+      setTimeout(() => startAutoScroll(), 1000);
     });
 
     // Lock scroll while gate is visible
     document.body.style.overflow = 'hidden';
+
+    /* ════════════════ AUTO-SCROLL ════════════════ */
+    const SCROLL_PX_PER_SEC = 50;       // ~50px/s
+    let autoScrollActive = false;
+    let autoScrollPaused = false;
+    let resumeTimer = null;
+    let lastScrollTime = 0;
+    let scrollRAF = null;
+    let isVideoFullscreen = false;
+    let isPlayerHovered = false;
+
+    function startAutoScroll() {
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced) return;
+
+      autoScrollActive = true;
+      autoScrollPaused = false;
+      lastScrollTime = performance.now();
+      scrollRAF = requestAnimationFrame(autoScrollTick);
+
+      // Detect user manual scroll → pause auto-scroll
+      const pauseEvents = ['wheel', 'touchstart', 'touchmove', 'pointerdown'];
+      pauseEvents.forEach(evt => {
+        window.addEventListener(evt, onUserScroll, { passive: true });
+      });
+
+      // Pause when hovering the music player
+      player.addEventListener('mouseenter', () => { isPlayerHovered = true; });
+      player.addEventListener('mouseleave', () => { isPlayerHovered = false; });
+      player.addEventListener('touchstart', () => { isPlayerHovered = true; }, { passive: true });
+      player.addEventListener('touchend', () => {
+        setTimeout(() => { isPlayerHovered = false; }, 1500);
+      }, { passive: true });
+
+      // Detect fullscreen changes (for video fullscreen)
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    }
+
+    function autoScrollTick(now) {
+      if (!autoScrollActive) return;
+      scrollRAF = requestAnimationFrame(autoScrollTick);
+
+      if (autoScrollPaused || isVideoFullscreen || isPlayerHovered) {
+        lastScrollTime = now;
+        return;
+      }
+
+      const delta = (now - lastScrollTime) / 1000;
+      lastScrollTime = now;
+      const px = SCROLL_PX_PER_SEC * delta;
+
+      // Stop at bottom
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (window.scrollY >= maxScroll) return;
+
+      window.scrollBy({ top: px, left: 0 });
+    }
+
+    function onUserScroll() {
+      if (!autoScrollActive) return;
+      autoScrollPaused = true;
+      clearTimeout(resumeTimer);
+      // Resume auto-scroll after 3 seconds of no interaction
+      resumeTimer = setTimeout(() => {
+        autoScrollPaused = false;
+        lastScrollTime = performance.now();
+      }, 3000);
+    }
+
+    function onFullscreenChange() {
+      isVideoFullscreen = !!(
+        document.fullscreenElement || document.webkitFullscreenElement
+      );
+      if (!isVideoFullscreen) {
+        lastScrollTime = performance.now();
+      }
+    }
+
+    /* ════════════════ VIDEO AUTOPLAY ON SCROLL ════════════════ */
+    function initVideoAutoplay() {
+      const videos = document.querySelectorAll('video');
+      if (!videos.length) return;
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target;
+          if (entry.isIntersecting) {
+            // Autoplay muted when scrolled into view
+            video.muted = true;
+            video.play().catch(() => {});
+          } else {
+            // Pause when scrolled out of view
+            video.pause();
+          }
+        });
+      }, { threshold: 0.4 });
+
+      videos.forEach(v => observer.observe(v));
+    }
 
     /* ════════════════ SCROLL REVEAL ════════════════ */
     function initReveal() {
